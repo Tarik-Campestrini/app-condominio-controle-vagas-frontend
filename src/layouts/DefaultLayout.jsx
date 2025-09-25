@@ -14,11 +14,10 @@ export default function DefaultLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-      {/* Navbar */}
       <Navbar />
 
-      {/* Menu de navegação */}
-      <nav className="flex justify-center gap-6 bg-gray-100 dark:bg-gray-900 py-4">
+      {/* Menu de navegação responsivo */}
+      <nav className="flex flex-wrap justify-center gap-4 bg-gray-100 dark:bg-gray-900 py-4 px-2 sm:px-0">
         {menuItems.map((item) => (
           <Link
             key={item.path}
@@ -32,12 +31,11 @@ export default function DefaultLayout({ children }) {
               }`}
           >
             {item.icon}
-            {item.label}
+            <span className="text-sm sm:text-base">{item.label}</span>
           </Link>
         ))}
       </nav>
 
-      {/* Conteúdo da página */}
       <main className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>

@@ -22,9 +22,9 @@ export default function Navbar() {
       {/* Botão Dark Mode no canto direito */}
       <button
         onClick={() => setDarkMode(!darkMode)}
-        className="absolute right-6 top-3 p-2 rounded-md bg-gray-200 dark:bg-gray-700"
+        className="absolute right-3 top-3 p-2 rounded-md bg-gray-200 dark:bg-gray-700 left-3 bottom-6 top-3 p-2 rounded-md bg-gray-200 dark:bg-gray-700"
       >
-        {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+        {darkMode ?  <Moon size={20} /> : <Sun size={20} />}
       </button>
     </header>
   );

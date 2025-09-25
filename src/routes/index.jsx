@@ -3,11 +3,19 @@ import DefaultLayout from "../layouts/DefaultLayout";
 import MoradoresPage from "../pages/Moradores";
 import VagasPage from "../pages/Vagas";
 import VeiculosPage from "../pages/Veiculos";
+import LoginPage from "../pages/Login";
 
 export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
+
+        <Route
+          path="/"
+          element={<LoginPage />}         
+          
+        />
+
         <Route
           path="/moradores"
           element={

@@ -1,30 +1,37 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Login from "../pages/Login";
-import Vagas from "../pages/Vagas";
-import ListaMoradores from "../pages/Moradores";
-import Veiculos from "../pages/Veiculos";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import DefaultLayout from "../layouts/DefaultLayout";
+import MoradoresPage from "../pages/Moradores";
+import VagasPage from "../pages/Vagas";
+import VeiculosPage from "../pages/Veiculos";
 
 export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        
-        {/* Login sem navbar */}
-        <Route path="/login" element={<Login />} />
-
-        {/* Páginas com layout padrão */}
-        <Route element={<DefaultLayout />}>
-          <Route path="/vagas" element={<Vagas />} />
-          <Route path="/moradores" element={<ListaMoradores />} />
-          <Route path="/veiculos" element={<Veiculos />} />
-        </Route>
-
-        {/* Redirecionar raiz para login */}
-        <Route path="/" element={<Navigate to="/login" />} />
-
-        {/* Página não encontrada */}
-        <Route path="*" element={<h1>404 - Página não encontrada</h1>} />
+        <Route
+          path="/moradores"
+          element={
+            <DefaultLayout>
+              <MoradoresPage />
+            </DefaultLayout>
+          }
+        />
+        <Route
+          path="/vagas"
+          element={
+            <DefaultLayout>
+              <VagasPage />
+            </DefaultLayout>
+          }
+        />
+        <Route
+          path="/veiculos"
+          element={
+            <DefaultLayout>
+              <VeiculosPage />
+            </DefaultLayout>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

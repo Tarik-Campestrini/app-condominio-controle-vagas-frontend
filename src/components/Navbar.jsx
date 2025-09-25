@@ -16,7 +16,7 @@ export default function Navbar() {
     <header className="relative border-b bg-white dark:bg-gray-900 shadow-md">
       {/* Nome centralizado */}
       <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 text-center py-3">
-        Controle de Vagas novo
+        Controle de Vagas
       </h1>
 
       {/* Botão Dark Mode no canto direito */}

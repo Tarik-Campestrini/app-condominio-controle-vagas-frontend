@@ -17,13 +17,11 @@ export default function AppRoutes() {
         />
 
         <Route
-          path="/moradores"
-          element={
-            <DefaultLayout>
-              <MoradoresPage />
-            </DefaultLayout>
-          }
+          path="/"
+          element={<MoradoresPage />}
+
         />
+        
         <Route
           path="/vagas"
           element={

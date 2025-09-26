@@ -9,35 +9,15 @@ export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Rota de login fora do layout */}
+        <Route path="/" element={<LoginPage />} />
 
-        <Route
-          path="/"
-          element={<LoginPage />}
-
-        />
-
-        <Route
-          path="/"
-          element={<MoradoresPage />}
-
-        />
-        
-        <Route
-          path="/vagas"
-          element={
-            <DefaultLayout>
-              <VagasPage />
-            </DefaultLayout>
-          }
-        />
-        <Route
-          path="/veiculos"
-          element={
-            <DefaultLayout>
-              <VeiculosPage />
-            </DefaultLayout>
-          }
-        />
+        {/* Rotas protegidas dentro do layout */}
+        <Route element={<DefaultLayout />}>
+          <Route path="/moradores" element={<MoradoresPage />} />
+          <Route path="/vagas" element={<VagasPage />} />
+          <Route path="/veiculos" element={<VeiculosPage />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

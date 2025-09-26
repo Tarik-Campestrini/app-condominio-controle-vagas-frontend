@@ -1,9 +1,9 @@
 import React from "react";
 import Navbar from "../components/Navbar";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, Outlet } from "react-router-dom";
 import { Home, Users, Car } from "lucide-react";
 
-export default function DefaultLayout({ children }) {
+export default function DefaultLayout() {
   const location = useLocation();
 
   const menuItems = [
@@ -36,8 +36,9 @@ export default function DefaultLayout({ children }) {
         ))}
       </nav>
 
+      {/* Onde as páginas vão ser renderizadas */}
       <main className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
+        <Outlet />
       </main>
     </div>
   );

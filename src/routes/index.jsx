@@ -12,8 +12,8 @@ export default function AppRoutes() {
 
         <Route
           path="/"
-          element={<LoginPage />}         
-          
+          element={<LoginPage />}
+
         />
 
         <Route

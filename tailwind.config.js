@@ -8,7 +8,13 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx,mdx}"
   ],
   theme: {
-    extend: {},
+    extend: {
+      // 👈 ADICIONANDO A FAMÍLIA DE FONTES POPPINS
+      fontFamily: {
+        // 'Poppins' será a primeira opção, seguida pela família padrão sans-serif do sistema
+        sans: ['Poppins', 'sans-serif'],
+      },
+    },
   },
   plugins: [forms],
 };

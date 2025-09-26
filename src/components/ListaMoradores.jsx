@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
 import api from "../service/api";
+import ModalCadastro from "../components/ui/Modal/ModalCadastro"; 
+import ModalConfirmacao from "../components/ui/Modal/ModalConfirmacao";
+import Toast from "../components/ui/Toast"; 
 
 export default function ListaMoradores() {
   const [moradores, setMoradores] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Controle do modal
+  // Controle do modal de Cadastro/Edição
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState({
@@ -16,18 +19,32 @@ export default function ListaMoradores() {
     apartamento: "",
   });
 
+  // Estado para Notificações Toast e Modais
+  const [toast, setToast] = useState({ message: '', type: '' });
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+
+  // Define os campos para o modal de Morador (para reutilização)
+  const MORADOR_FIELDS = [
+    { name: "nome", placeholder: "Nome", type: "text" },
+    { name: "email", placeholder: "Email", type: "email" },
+    { name: "telefone", placeholder: "Telefone", type: "text" },
+    { name: "bloco", placeholder: "Bloco", type: "text" },
+    { name: "apartamento", placeholder: "Apartamento", type: "text" },
+  ];
+
   // Buscar moradores
   const fetchMoradores = async () => {
-  try {
-    const res = await api.get("/moradores");
-    console.log("Resposta da API:", res.data); // 👀
-    setMoradores(Array.isArray(res.data) ? res.data : []);
-  } catch (error) {
-    console.error("Erro ao buscar moradores:", error);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      const res = await api.get("/moradores");
+      setMoradores(Array.isArray(res.data) ? res.data : []);
+    } catch (error) {
+      console.error("Erro ao buscar moradores:", error);
+      setToast({ message: "Erro ao carregar lista.", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchMoradores();
@@ -36,174 +53,163 @@ export default function ListaMoradores() {
   // Abrir modal para criar
   const openCreateModal = () => {
     setEditing(null);
-    setFormData({
-      nome: "",
-      email: "",
-      telefone: "",
-      bloco: "",
-      apartamento: "",
-    });
+    setFormData({ nome: "", email: "", telefone: "", bloco: "", apartamento: "" });
     setShowModal(true);
   };
 
   // Abrir modal para editar
   const openEditModal = (morador) => {
     setEditing(morador._id);
-    setFormData(morador);
+    setFormData({ 
+        nome: morador.nome,
+        email: morador.email,
+        telefone: morador.telefone,
+        bloco: morador.bloco,
+        apartamento: morador.apartamento,
+    });
     setShowModal(true);
   };
 
-  // Salvar (criar/editar)
+  // Salvar (criar/editar) - Função chamada pelo ModalCadastro
   const handleSave = async (e) => {
     e.preventDefault();
+    const isEditing = !!editing;
     try {
-      if (editing) {
+      if (isEditing) {
         await api.put(`/moradores/${editing}`, formData);
       } else {
         await api.post("/moradores", formData);
       }
       fetchMoradores();
       setShowModal(false);
+      
+      const message = isEditing ? "Morador atualizado com sucesso!" : "Morador cadastrado com sucesso!";
+      setToast({ message, type: "success" });
+      
     } catch (error) {
       console.error("Erro ao salvar:", error);
+      setToast({ message: "E-mail do morador  já cadastrado.", type: "error" });
     }
   };
 
-  // Deletar
-  const handleDelete = async (id) => {
-    if (!window.confirm("Deseja realmente deletar?")) return;
+  // Abrir Modal de Confirmação (substitui window.confirm)
+  const openConfirmDeleteModal = (id) => {
+    setItemToDelete(id);
+    setShowConfirmModal(true);
+  };
+  
+  // Confirmação de Deleção (chamada pelo ModalConfirmacao)
+  const handleConfirmDelete = async () => {
+    const id = itemToDelete;
+    setShowConfirmModal(false);
+    setItemToDelete(null); 
+
     try {
       await api.delete(`/moradores/${id}`);
       fetchMoradores();
+      
+      setToast({ message: "Morador deletado com sucesso!", type: "success" });
+      
     } catch (error) {
       console.error("Erro ao deletar:", error);
+      setToast({ message: "Erro ao deletar morador.", type: "error" });
     }
   };
 
-  if (loading) return <p className="text-center py-10">Carregando...</p>;
+  if (loading) return <p className="text-center py-10 text-gray-900 dark:text-gray-200">Carregando...</p>;
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 overflow-x-auto">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Gestão de Moradores</h2>
-        <button
+    // Fragmento (<>) permite retornar múltiplos elementos sem uma div wrapper
+    <>
+      <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 overflow-x-auto text-gray-900 dark:text-gray-200">
+        
+        {/* Cabeçalho (Botão e Título) */}
+        <div className="grid grid-cols-3 items-center mb-6">
+          <div className="col-span-1"></div> 
+          
+          {/* Título Centralizado */}
+          <h2 className="text-3xl font-extrabold dark:text-white flex justify-center col-span-1">Gestão de Moradores</h2>
+          
+          {/* Botão Cadastrar (Alinhado à direita) */}
+          <div className="flex justify-end col-span-1">
+              <button
           onClick={openCreateModal}
           className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
         >
           Cadastrar
         </button>
-      </div>
-
-      <div className="w-full lg:w-1/2 mx-auto overflow-x-auto">
-  <table className="w-full text-left border-collapse shadow rounded-lg">
-    <thead>
-      <tr className="bg-blue-600 text-white">
-        <th className="p-2">Nome</th>
-        <th className="p-2">Email</th>
-        <th className="p-2">Telefone</th>
-        <th className="p-2">Bloco</th>
-        <th className="p-2">Apartamento</th>
-        <th className="p-2">Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      {moradores.map((morador) => (
-        <tr key={morador._id} className="border-b dark:border-gray-700">
-          <td className="p-2">{morador.nome}</td>
-          <td className="p-2">{morador.email}</td>
-          <td className="p-2">{morador.telefone}</td>
-          <td className="p-2">{morador.bloco}</td>
-          <td className="p-2">{morador.apartamento}</td>
-          <td className="p-2 flex gap-2">
-            <button
-              onClick={() => openEditModal(morador)}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
-            >
-              Editar
-            </button>
-            <button
-              onClick={() => handleDelete(morador._id)}
-              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-            >
-              Deletar
-            </button>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
-
-
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-lg w-full max-w-md">
-            <h3 className="text-lg font-bold mb-4">
-              {editing ? "Editar Morador" : "Cadastrar Morador"}
-            </h3>
-
-            <form onSubmit={handleSave} className="space-y-3">
-              <input
-                type="text"
-                placeholder="Nome"
-                value={formData.nome}
-                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
-                required
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Telefone"
-                value={formData.telefone}
-                onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-                className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Bloco"
-                value={formData.bloco}
-                onChange={(e) => setFormData({ ...formData, bloco: e.target.value })}
-                className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Apartamento"
-                value={formData.apartamento}
-                onChange={(e) => setFormData({ ...formData, apartamento: e.target.value })}
-                className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
-                required
-              />
-
-              <div className="flex justify-end gap-2 mt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                >
-                  Salvar
-                </button>
-              </div>
-            </form>
           </div>
         </div>
-      )}
-    </div>
+
+        {/* Tabela de Moradores */}
+        <div className="w-full overflow-x-auto">
+          <table className="min-w-full text-left border-collapse shadow rounded-lg">
+            <thead>
+              <tr className="bg-blue-600 text-white">
+                <th className="p-3">Nome</th>
+                <th className="p-3">Email</th>
+                <th className="p-3">Telefone</th>
+                <th className="p-3">Bloco</th>
+                <th className="p-3">Apartamento</th>
+                <th className="p-3">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {moradores.map((morador, index) => (
+                <tr 
+                  key={morador._id} 
+                  className={`border-b dark:border-gray-700 
+                              ${index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-700' : 'bg-white dark:bg-gray-800'}`}
+                >
+                  <td className="p-3">{morador.nome}</td>
+                  <td className="p-3">{morador.email}</td>
+                  <td className="p-3">{morador.telefone}</td>
+                  <td className="p-3">{morador.bloco}</td>
+                  <td className="p-3">{morador.apartamento}</td>
+                  <td className="p-3 flex gap-2">
+                    <button
+                      onClick={() => openEditModal(morador)}
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded transition"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => openConfirmDeleteModal(morador._id)}
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition"
+                    >
+                      Deletar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* MODAIS (Renderizados dentro do container principal, mas flutuam com z-50) */}
+        <ModalCadastro
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSave={handleSave}
+          editing={editing}
+          formData={formData}
+          setFormData={setFormData}
+          modalTitle={editing ? " Morador" : " Morador"}
+          fields={MORADOR_FIELDS}
+        />
+        
+        <ModalConfirmacao
+          isOpen={showConfirmModal}
+          onClose={() => setShowConfirmModal(false)}
+          onConfirm={handleConfirmDelete}
+          message="Deseja realmente deletar este morador?"
+        />
+        
+      </div>
+      
+      {/* O TOAST É RENDERIZADO FORA DO CONTAINER PRINCIPAL PARA GARANTIR O FIXED */}
+      <Toast toast={toast} setToast={setToast} />
+      
+    </>
   );
 }

@@ -13,7 +13,7 @@ export default function DefaultLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-100 font-sans dark:bg-gray-900">
       <Navbar />
 
       {/* Menu de navegação responsivo */}

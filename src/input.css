@@ -1,3 +1,19 @@
+/* src/input.css */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+/* NOVO BLOCO DE FORÇA PARA OS BOTÕES NO DARK MODE */
+html.dark .force-dark-mode-save {
+    /* Força o background azul no dark mode (ex: blue-500) */
+    background-color: #3b82f6 !important; 
+    color: #ffffff !important;
+}
+
+html.dark .force-dark-mode-cancel {
+    /* Força o background cinza no dark mode (ex: gray-600) */
+    background-color: #4b5563 !important; 
+    color: #ffffff !important;
+}

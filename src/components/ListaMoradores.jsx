@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState } from "react";
 import api from "../service/api";
-import ModalCadastro from "../components/ui/Modal/ModalCadastro"; 
+import ModalCadastro from "../components/ui/Modal/ModalCadastro";
 import ModalConfirmacao from "../components/ui/Modal/ModalConfirmacao";
-import Toast from "../components/ui/Toast"; 
+import Toast from "../components/ui/Toast";
 
 export default function ListaMoradores() {
   const [moradores, setMoradores] = useState([]);
@@ -26,11 +27,11 @@ export default function ListaMoradores() {
 
   // Define os campos para o modal de Morador (para reutilização)
   const MORADOR_FIELDS = [
-    { name: "nome", placeholder: "Nome", type: "text" },
+    { name: "nome", placeholder: "Nome" },
     { name: "email", placeholder: "Email", type: "email" },
-    { name: "telefone", placeholder: "Telefone", type: "text" },
-    { name: "bloco", placeholder: "Bloco", type: "text" },
-    { name: "apartamento", placeholder: "Apartamento", type: "text" },
+    { name: "bloco", placeholder: "Bloco" },
+    { name: "apartamento", placeholder: "Apartamento" },
+    { name: "telefone", placeholder: "Telefone" }
   ];
 
   // Buscar moradores
@@ -60,12 +61,12 @@ export default function ListaMoradores() {
   // Abrir modal para editar
   const openEditModal = (morador) => {
     setEditing(morador._id);
-    setFormData({ 
-        nome: morador.nome,
-        email: morador.email,
-        telefone: morador.telefone,
-        bloco: morador.bloco,
-        apartamento: morador.apartamento,
+    setFormData({
+      nome: morador.nome,
+      email: morador.email,
+      telefone: morador.telefone,
+      bloco: morador.bloco,
+      apartamento: morador.apartamento,
     });
     setShowModal(true);
   };
@@ -82,10 +83,10 @@ export default function ListaMoradores() {
       }
       fetchMoradores();
       setShowModal(false);
-      
+
       const message = isEditing ? "Morador atualizado com sucesso!" : "Morador cadastrado com sucesso!";
       setToast({ message, type: "success" });
-      
+
     } catch (error) {
       console.error("Erro ao salvar:", error);
       setToast({ message: "E-mail do morador  já cadastrado.", type: "error" });
@@ -97,19 +98,19 @@ export default function ListaMoradores() {
     setItemToDelete(id);
     setShowConfirmModal(true);
   };
-  
+
   // Confirmação de Deleção (chamada pelo ModalConfirmacao)
   const handleConfirmDelete = async () => {
     const id = itemToDelete;
     setShowConfirmModal(false);
-    setItemToDelete(null); 
+    setItemToDelete(null);
 
     try {
       await api.delete(`/moradores/${id}`);
       fetchMoradores();
-      
+
       setToast({ message: "Morador deletado com sucesso!", type: "success" });
-      
+
     } catch (error) {
       console.error("Erro ao deletar:", error);
       setToast({ message: "Erro ao deletar morador.", type: "error" });
@@ -122,22 +123,22 @@ export default function ListaMoradores() {
     // Fragmento (<>) permite retornar múltiplos elementos sem uma div wrapper
     <>
       <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 overflow-x-auto text-gray-900 dark:text-gray-200">
-        
+
         {/* Cabeçalho (Botão e Título) */}
         <div className="grid grid-cols-3 items-center mb-6">
-          <div className="col-span-1"></div> 
-          
+          <div className="col-span-1"></div>
+
           {/* Título Centralizado */}
           <h2 className="text-3xl font-extrabold dark:text-white flex justify-center col-span-1">Gestão de Moradores</h2>
-          
+
           {/* Botão Cadastrar (Alinhado à direita) */}
           <div className="flex justify-end col-span-1">
-              <button
-          onClick={openCreateModal}
-          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
-        >
-          Cadastrar
-        </button>
+            <button
+              onClick={openCreateModal}
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
+            >
+              Cadastrar
+            </button>
           </div>
         </div>
 
@@ -156,8 +157,8 @@ export default function ListaMoradores() {
             </thead>
             <tbody>
               {moradores.map((morador, index) => (
-                <tr 
-                  key={morador._id} 
+                <tr
+                  key={morador._id}
                   className={`border-b dark:border-gray-700 
                               ${index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-700' : 'bg-white dark:bg-gray-800'}`}
                 >
@@ -197,19 +198,19 @@ export default function ListaMoradores() {
           modalTitle={editing ? " Morador" : " Morador"}
           fields={MORADOR_FIELDS}
         />
-        
+
         <ModalConfirmacao
           isOpen={showConfirmModal}
           onClose={() => setShowConfirmModal(false)}
           onConfirm={handleConfirmDelete}
           message="Deseja realmente deletar este morador?"
         />
-        
+
       </div>
-      
+
       {/* O TOAST É RENDERIZADO FORA DO CONTAINER PRINCIPAL PARA GARANTIR O FIXED */}
       <Toast toast={toast} setToast={setToast} />
-      
+
     </>
   );
 }

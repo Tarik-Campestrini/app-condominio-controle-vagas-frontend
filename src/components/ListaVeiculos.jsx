@@ -1,85 +1,96 @@
+/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import api from "../service/api";
-import ModalCadastro from "./ui/Modal/ModalCadastro"; 
-import ModalConfirmacao from "./ui/Modal/ModalConfirmacao";
-import Toast from "./ui/Toast"; 
+import ModalCadastro from "../components/ui/Modal/ModalCadastro";
+import ModalConfirmacao from "../components/ui/Modal/ModalConfirmacao";
+import Toast from "../components/ui/Toast";
 
 export default function ListaVeiculos() {
   const [veiculos, setVeiculos] = useState([]);
-  const [moradores, setMoradores] = useState([]);
+  const [moradores, setMoradores] = useState([]); // para popular select de morador
   const [loading, setLoading] = useState(true);
 
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState({
+    placa: "",
     marca: "",
     modelo: "",
-    placa: "",
     cor: "",
-    moradorId: "",
+    morador: "",
     vaga: "",
     ativo: true,
   });
 
-  const [toast, setToast] = useState({ message: '', type: '' });
+  const [toast, setToast] = useState({ message: "", type: "" });
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
 
-  // Campos para o modal de Veículo
   const VEICULO_FIELDS = [
-    { name: "marca", placeholder: "Marca", type: "text" },
-    { name: "modelo", placeholder: "Modelo", type: "text" },
-    { name: "placa", placeholder: "Placa", type: "text" },
-    { name: "cor", placeholder: "Cor", type: "text" },
-    { name: "moradorId", placeholder: "Morador", type: "select", options: moradores.map(m => ({ value: m._id, label: m.nome })) },
-    { name: "vaga", placeholder: "Vaga", type: "text" },
-    { name: "ativo", placeholder: "Ativo", type: "checkbox" },
-  ];
+  { name: "placa", placeholder: "Placa" },
+  { name: "marca", placeholder: "Marca" },
+  { name: "modelo", placeholder: "Modelo" },
+  { name: "cor", placeholder: "Cor" },
+  {
+    name: "morador",
+    placeholder: "Selecione o morador",
+    type: "select",
+    options: moradores.map((m) => ({
+      value: m._id,
+      label: `${m.nome}`
+    }))
+  }
+];
 
-  // Buscar veículos
   const fetchVeiculos = async () => {
     try {
       const res = await api.get("/veiculos");
       setVeiculos(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
-      console.error("Erro ao buscar veículos:", error);
-      setToast({ message: "Erro ao carregar lista.", type: "error" });
+      setToast({ message: "Erro ao carregar veículos.", type: "error" });
     } finally {
       setLoading(false);
     }
   };
 
-  // Buscar moradores para dropdown
   const fetchMoradores = async () => {
     try {
       const res = await api.get("/moradores");
-      setMoradores(Array.isArray(res.data) ? res.data : []);
+      setMoradores(res.data || []);
     } catch (error) {
       console.error("Erro ao buscar moradores:", error);
     }
   };
 
   useEffect(() => {
-    fetchMoradores();
     fetchVeiculos();
+    fetchMoradores();
   }, []);
 
   const openCreateModal = () => {
     setEditing(null);
-    setFormData({ marca: "", modelo: "", placa: "", cor: "", moradorId: "", vaga: "", ativo: true });
+    setFormData({
+      placa: "",
+      marca: "",
+      modelo: "",
+      cor: "",
+      morador: "",
+      vaga: "",
+      ativo: true,
+    });
     setShowModal(true);
   };
 
-  const openEditModal = (v) => {
-    setEditing(v._id);
-    setFormData({ 
-      marca: v.marca,
-      modelo: v.modelo,
-      placa: v.placa,
-      cor: v.cor,
-      moradorId: v.morador?._id || "",
-      vaga: v.vaga,
-      ativo: v.ativo,
+  const openEditModal = (veiculo) => {
+    setEditing(veiculo._id);
+    setFormData({
+      placa: veiculo.placa,
+      marca: veiculo.marca,
+      modelo: veiculo.modelo,
+      cor: veiculo.cor,
+      morador: veiculo.morador?._id || "",
+      vaga: veiculo.vaga,
+      ativo: veiculo.ativo,
     });
     setShowModal(true);
   };
@@ -95,9 +106,13 @@ export default function ListaVeiculos() {
       }
       fetchVeiculos();
       setShowModal(false);
-      setToast({ message: isEditing ? "Veículo atualizado!" : "Veículo cadastrado!", type: "success" });
+      setToast({
+        message: isEditing
+          ? "Veículo atualizado com sucesso!"
+          : "Veículo cadastrado com sucesso!",
+        type: "success",
+      });
     } catch (error) {
-      console.error("Erro ao salvar:", error);
       setToast({ message: "Erro ao salvar veículo.", type: "error" });
     }
   };
@@ -108,28 +123,34 @@ export default function ListaVeiculos() {
   };
 
   const handleConfirmDelete = async () => {
-    const id = itemToDelete;
-    setShowConfirmModal(false);
-    setItemToDelete(null); 
     try {
-      await api.delete(`/veiculos/${id}`);
+      await api.delete(`/veiculos/${itemToDelete}`);
       fetchVeiculos();
-      setToast({ message: "Veículo deletado!", type: "success" });
+      setToast({ message: "Veículo deletado com sucesso!", type: "success" });
     } catch (error) {
-      console.error("Erro ao deletar:", error);
       setToast({ message: "Erro ao deletar veículo.", type: "error" });
+    } finally {
+      setShowConfirmModal(false);
+      setItemToDelete(null);
     }
   };
 
-  if (loading) return <p className="text-center py-10 text-gray-900 dark:text-gray-200">Carregando...</p>;
+  if (loading)
+    return (
+      <p className="text-center py-10 text-gray-900 dark:text-gray-200">
+        Carregando...
+      </p>
+    );
 
   return (
     <>
       <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 overflow-x-auto text-gray-900 dark:text-gray-200">
         <div className="grid grid-cols-3 items-center mb-6">
-          <div className="col-span-1"></div> 
-          <h2 className="text-3xl font-extrabold dark:text-white flex justify-center col-span-1">Gestão de Veículos</h2>
-          <div className="flex justify-end col-span-1">
+          <div></div>
+          <h2 className="text-3xl font-extrabold dark:text-white text-center">
+            Gestão de Veículos
+          </h2>
+          <div className="flex justify-end">
             <button
               onClick={openCreateModal}
               className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
@@ -143,9 +164,9 @@ export default function ListaVeiculos() {
           <table className="min-w-full text-left border-collapse shadow rounded-lg">
             <thead>
               <tr className="bg-blue-600 text-white">
+                <th className="p-3">Placa</th>
                 <th className="p-3">Marca</th>
                 <th className="p-3">Modelo</th>
-                <th className="p-3">Placa</th>
                 <th className="p-3">Cor</th>
                 <th className="p-3">Morador</th>
                 <th className="p-3">Vaga</th>
@@ -154,17 +175,20 @@ export default function ListaVeiculos() {
               </tr>
             </thead>
             <tbody>
-              {veiculos.map((v, index) => (
-                <tr 
-                  key={v._id} 
-                  className={`border-b dark:border-gray-700 
-                              ${index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-700' : 'bg-white dark:bg-gray-800'}`}
+              {veiculos.map((v, i) => (
+                <tr
+                  key={v._id}
+                  className={`border-b dark:border-gray-700 ${
+                    i % 2 === 0
+                      ? "bg-gray-50 dark:bg-gray-700"
+                      : "bg-white dark:bg-gray-800"
+                  }`}
                 >
+                  <td className="p-3">{v.placa}</td>
                   <td className="p-3">{v.marca}</td>
                   <td className="p-3">{v.modelo}</td>
-                  <td className="p-3">{v.placa}</td>
                   <td className="p-3">{v.cor}</td>
-                  <td className="p-3">{v.morador?.nome || "-"}</td>
+                  <td className="p-3">{v.morador?.nome}</td>
                   <td className="p-3">{v.vaga}</td>
                   <td className="p-3">{v.ativo ? "Sim" : "Não"}</td>
                   <td className="p-3 flex gap-2">
@@ -197,7 +221,7 @@ export default function ListaVeiculos() {
           modalTitle={editing ? "Veículo" : "Veículo"}
           fields={VEICULO_FIELDS}
         />
-        
+
         <ModalConfirmacao
           isOpen={showConfirmModal}
           onClose={() => setShowConfirmModal(false)}
@@ -205,7 +229,7 @@ export default function ListaVeiculos() {
           message="Deseja realmente deletar este veículo?"
         />
       </div>
-      
+
       <Toast toast={toast} setToast={setToast} />
     </>
   );

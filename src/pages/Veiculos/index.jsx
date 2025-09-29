@@ -1,3 +1,10 @@
-export default function Veiculos() {
-  return <h1>📌 Página de Veículos</h1>;
+import React from "react";
+import ListaVeiculos from "../../components/ListaVeiculos";
+
+export default function VeiculosPage() {
+  return (
+    <div className="p-6">
+      <ListaVeiculos />
+    </div>
+  );
 }

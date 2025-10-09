@@ -1,12 +1,11 @@
-import { defineConfig } from 'vite'
-import tailwindcss from '@tailwindcss/vite'
-import react from '@vitejs/plugin-react-swc'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react'; // Alterado para o plugin padrão
 
 // https://vite.dev/config/
-export default defineConfig({  
-  plugins: [    
+export default defineConfig({
+  plugins: [
     react(),
-    tailwindcss(),
+    // REMOVEMOS O PLUGIN tailwindcss() DAQUI
   ],
 
   resolve: {
@@ -14,19 +13,15 @@ export default defineConfig({
       '@': '/src',
     },
   },
-  
+
   server: {
     proxy: {
       "/api": {
-        target: "https://app-condominio-controle-vagas-backend.vercel.app/api",
-        //target: "http://localhost:3000/", 
+        target: "https://app-condominio-controle-vagas-backend.vercel.app/",
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, ""),
-
       },
     },
   },
-  
-  
-})
+});

@@ -1,72 +1,85 @@
-import React from 'react';
+// src/components/CardVaga.jsx
 
-// IMPORTANTE: Substitua por seus ícones reais (SVG, Heroicons, etc.)
-const VehicleIcon = () => <span className="text-xl mr-2 text-gray-600 dark:text-gray-400">🚗</span>;
-const ParkingIcon = () => <span className="text-xl mr-2 text-gray-600 dark:text-gray-400">🅿️</span>;
-const UnlockIcon = () => <span className="mr-1">🔓</span>; 
-const OccupyIcon = () => <span className="mr-1">🔒</span>;
+import React from "react";
+import { Car, ParkingCircle } from "lucide-react"; // Importando os ícones
 
 export default function CardVaga({ vaga, onOcupar, onLiberar }) {
-    const isLivre = vaga.status === 'Livre'; 
-    const isMoto = vaga.tipo === 'moto';
+  const statusNormalizado = vaga.status?.toLowerCase();
+  const isOcupada = statusNormalizado === "ocupada";
 
-    // Classes condicionais para a borda (Verde para Livre, Vermelho para Ocupada)
-    const borderColorClass = isLivre ? 'border-green-500' : 'border-red-500';
+  // Define as classes de estilo com base no status
+  const styles = {
+    borda: isOcupada ? "border-red-400" : "border-green-400",
+    textoStatus: isOcupada ? "text-red-500" : "text-green-500",
+    bgIcone: isOcupada ? "bg-red-100" : "bg-green-100",
+    icone: isOcupada ? "text-red-500" : "text-green-500",
+    botaoLiberar: "w-full mt-4 bg-gray-200 text-gray-600 font-semibold py-2 rounded-lg hover:bg-gray-300 transition flex items-center justify-center gap-2",
+    botaoOcupar: "w-full mt-4 bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-2",
+  };
 
-    return (
-        // Borda Condicional, Sombra e Suporte a Dark Mode no fundo do card
-        <div className={`p-5 rounded-xl border-2 shadow-sm ${borderColorClass} bg-white dark:bg-gray-800`}>
-            
-            {/* Linha do Ícone, Título e Status */}
-            <div className="flex justify-between items-center mb-3">
-                <div className="flex items-center">
-                    {isMoto ? <ParkingIcon /> : <VehicleIcon />}
-                    <h3 className="text-lg font-medium text-gray-800 dark:text-white">{vaga.nome}</h3>
-                </div>
-                {/* Texto do status com cor condicional */}
-                <span className={`text-sm font-bold ${isLivre ? 'text-green-600' : 'text-red-600'}`}>
-                    {vaga.status}
-                </span>
+  return (
+    // Container principal do card com flexbox para layout interno
+    <div
+      className={`flex flex-col justify-between rounded-lg p-4 shadow-md bg-white dark:bg-gray-800 border-2 ${styles.borda} h-full`}
+    >
+      <div> {/* Wrapper para o conteúdo superior, para o botão ficar no rodapé */}
+        <div className="flex justify-between items-start mb-3">
+          {/* Ícone e Título */}
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-full ${styles.bgIcone}`}>
+              {isOcupada && vaga.visitante ? (
+                <ParkingCircle size={24} className={styles.icone} />
+              ) : (
+                <Car size={24} className={styles.icone} />
+              )}
             </div>
-
-            {/* Detalhes da vaga Ocupada */}
-            {!isLivre && (
-                <div className="text-sm text-gray-700 dark:text-gray-300 space-y-1 mt-3 pb-3">
-                    <p>Ocupante: 
-                        <span className={`font-bold ml-1 ${vaga.ocupante === 'Visitante' ? 'text-red-600' : 'text-gray-900 dark:text-white'}`}>
-                            {vaga.ocupante}
-                        </span>
-                    </p>
-                    <p>Placa: <strong className="font-bold">{vaga.placa}</strong></p>
-                    <p>Modelo: {vaga.modelo}</p>
-                    <p>Cor: {vaga.cor}</p>
-                    <p>Tel: {vaga.tel || 'N/A'}</p>
-                </div>
-            )}
-
-            {/* Botões de Ação */}
-            {isLivre ? (
-                // Botão "Ocupar Vaga" (ROXO)
-                <button
-                    onClick={() => onOcupar(vaga.id)}
-                    className="w-full mt-4 py-2 flex items-center justify-center 
-                               bg-[#5B47D4] text-white font-semibold rounded-lg 
-                               hover:bg-[#483aab] transition duration-150"
-                >
-                    <OccupyIcon /> Ocupar Vaga
-                </button>
-            ) : (
-                // Botão "Liberar Vaga" (CINZA - Contraste ajustado para Dark Mode)
-                <button
-                    onClick={() => onLiberar(vaga.id)}
-                    className="w-full mt-4 py-2 flex items-center justify-center 
-                               bg-gray-300 text-gray-900 
-                               dark:bg-gray-700 dark:text-gray-200 font-semibold rounded-lg 
-                               hover:bg-gray-400 dark:hover:bg-gray-600 transition duration-150"
-                >
-                    <UnlockIcon /> Liberar Vaga
-                </button>
-            )}
+            <h2 className="text-lg font-bold text-gray-800 dark:text-white">
+              Vaga {vaga.identificador}
+            </h2>
+          </div>
+          {/* Selo de Status */}
+          <span className={`text-xs font-bold ${styles.textoStatus}`}>
+            {isOcupada ? "Ocupada" : "Livre"}
+          </span>
         </div>
-    );
+
+        {/* Detalhes do ocupante (só aparece se estiver ocupada) */}
+        {isOcupada && (
+          <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300 pl-1">
+            <p>
+              <span className="font-semibold">Ocupante:</span>{" "}
+              {vaga.morador?.nome || vaga.visitante?.nome || "N/A"}
+            </p>
+            <p>
+              <span className="font-semibold">Placa:</span>{" "}
+              {vaga.veiculo?.placa || vaga.visitante?.placa || "N/A"}
+            </p>
+            <p>
+              <span className="font-semibold">Modelo:</span>{" "}
+              {vaga.veiculo?.modelo || vaga.visitante?.modelo || "N/A"}
+            </p>
+            <p>
+              <span className="font-semibold">Cor:</span>{" "}
+              {vaga.veiculo?.cor || vaga.visitante?.cor || "N/A"}
+            </p>
+            <p>
+              <span className="font-semibold">Tel:</span>{" "}
+              {vaga.morador?.telefone || vaga.visitante?.telefone || "N/A"}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Botão de Ação */}
+      {isOcupada ? (
+        <button onClick={() => onLiberar(vaga._id)} className={styles.botaoLiberar}>
+          <ParkingCircle size={16} /> Liberar Vaga
+        </button>
+      ) : (
+        <button onClick={() => onOcupar(vaga)} className={styles.botaoOcupar}>
+          <ParkingCircle size={16} /> Ocupar Vaga
+        </button>
+      )}
+    </div>
+  );
 }

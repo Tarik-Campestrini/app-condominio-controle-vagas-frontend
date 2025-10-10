@@ -1,13 +1,17 @@
 /* eslint-disable no-unused-vars */
+import CardSkeleton from "../components/CardSkeleton";
 import React, { useEffect, useState } from "react";
+import EmptyState from "../components/ui/EmptyState"; // Importando
+import { Car } from "lucide-react"; // Importando ícone
 import api from "../service/api";
 import ModalCadastro from "../components/ui/Modal/ModalCadastro";
 import ModalConfirmacao from "../components/ui/Modal/ModalConfirmacao";
 import Toast from "../components/ui/Toast";
+import CardVeiculo from "../components/CardVeiculo"; // Importando o novo Card
 
 export default function ListaVeiculos() {
   const [veiculos, setVeiculos] = useState([]);
-  const [moradores, setMoradores] = useState([]); // para popular select de morador
+  const [moradores, setMoradores] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [showModal, setShowModal] = useState(false);
@@ -18,7 +22,6 @@ export default function ListaVeiculos() {
     modelo: "",
     cor: "",
     morador: "",
-    vaga: "",
     ativo: true,
   });
 
@@ -26,45 +29,25 @@ export default function ListaVeiculos() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
 
-  const VEICULO_FIELDS = [
-  { name: "placa", placeholder: "Placa" },
-  { name: "marca", placeholder: "Marca" },
-  { name: "modelo", placeholder: "Modelo" },
-  { name: "cor", placeholder: "Cor" },
-  {
-    name: "morador",
-    placeholder: "Selecione o morador",
-    type: "select",
-    options: moradores.map((m) => ({
-      value: m._id,
-      label: `${m.nome}`
-    }))
-  }
-];
-
-  const fetchVeiculos = async () => {
+  // Combina as chamadas de API 
+  const fetchData = async () => {
+    setLoading(true);
     try {
-      const res = await api.get("/veiculos");
-      setVeiculos(Array.isArray(res.data) ? res.data : []);
+      const [veiculosRes, moradoresRes] = await Promise.all([
+        api.get("/veiculos"),
+        api.get("/moradores"),
+      ]);
+      setVeiculos(Array.isArray(veiculosRes.data) ? veiculosRes.data : []);
+      setMoradores(Array.isArray(moradoresRes.data) ? moradoresRes.data : []);
     } catch (error) {
-      setToast({ message: "Erro ao carregar veículos.", type: "error" });
+      setToast({ message: "Erro ao carregar dados.", type: "error" });
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchMoradores = async () => {
-    try {
-      const res = await api.get("/moradores");
-      setMoradores(res.data || []);
-    } catch (error) {
-      console.error("Erro ao buscar moradores:", error);
-    }
-  };
-
   useEffect(() => {
-    fetchVeiculos();
-    fetchMoradores();
+    fetchData();
   }, []);
 
   const openCreateModal = () => {
@@ -75,7 +58,6 @@ export default function ListaVeiculos() {
       modelo: "",
       cor: "",
       morador: "",
-      vaga: "",
       ativo: true,
     });
     setShowModal(true);
@@ -89,22 +71,20 @@ export default function ListaVeiculos() {
       modelo: veiculo.modelo,
       cor: veiculo.cor,
       morador: veiculo.morador?._id || "",
-      vaga: veiculo.vaga,
       ativo: veiculo.ativo,
     });
     setShowModal(true);
   };
 
-  const handleSave = async (e) => {
-    e.preventDefault();
+  const handleSave = async (data) => {
     const isEditing = !!editing;
     try {
       if (isEditing) {
-        await api.put(`/veiculos/${editing}`, formData);
+        await api.put(`/veiculos/${editing}`, data);
       } else {
-        await api.post("/veiculos", formData);
+        await api.post("/veiculos", data);
       }
-      fetchVeiculos();
+      fetchData(); 
       setShowModal(false);
       setToast({
         message: isEditing
@@ -125,7 +105,7 @@ export default function ListaVeiculos() {
   const handleConfirmDelete = async () => {
     try {
       await api.delete(`/veiculos/${itemToDelete}`);
-      fetchVeiculos();
+      fetchData(); 
       setToast({ message: "Veículo deletado com sucesso!", type: "success" });
     } catch (error) {
       setToast({ message: "Erro ao deletar veículo.", type: "error" });
@@ -135,101 +115,111 @@ export default function ListaVeiculos() {
     }
   };
 
-  if (loading)
+  // Campos do formulário
+  // Adiciona o campo "morador" como select
+  // Popula as opções com os moradores carregados
+  const VEICULO_FIELDS = [
+    { name: "placa", placeholder: "Placa", required: true },
+    { name: "marca", placeholder: "Marca", required: true },
+    { name: "modelo", placeholder: "Modelo" },
+    { name: "cor", placeholder: "Cor" },
+    {
+      name: "morador",
+      placeholder: "Selecione o morador",
+      type: "select",
+      options: moradores.map((m) => ({
+        value: m._id,
+        label: `${m.nome} - Bloco ${m.bloco}, Apto ${m.apartamento}`,
+      })),
+      required: true,
+    },
+  ];
+
+  if (loading) {
     return (
-      <p className="text-center py-10 text-gray-900 dark:text-gray-200">
-        Carregando...
-      </p>
+      <div className="p-4 sm:p-6">
+        {/* Cabeçalho estático enquanto carrega */}
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">
+            Gestão de Moradores
+          </h2>
+          <div className="bg-gray-200 dark:bg-gray-700 h-10 w-24 rounded-lg animate-pulse"></div>
+        </div>
+  
+        
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        
+          {Array.from({ length: 6 }).map((_, index) => (
+            <CardSkeleton key={index} />
+          ))}
+        </div>
+      </div>
     );
+  }
 
   return (
     <>
-      <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 overflow-x-auto text-gray-900 dark:text-gray-200">
-        <div className="grid grid-cols-3 items-center mb-6">
-          <div></div>
-          <h2 className="text-3xl font-extrabold dark:text-white text-center">
+      <div className="p-4 sm:p-6">
+        {/* CABEÇALHO RESPONSIVO */}
+        <div className="flex flex-col sm:relative sm:flex-row sm:justify-center items-center mb-6 gap-4 sm:h-10">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white text-center">
             Gestão de Veículos
           </h2>
-          <div className="flex justify-end">
+          <div className="w-full sm:w-auto sm:absolute sm:right-0">
             <button
               onClick={openCreateModal}
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition w-full sm:w-auto"
             >
               Cadastrar
             </button>
           </div>
         </div>
 
-        <div className="w-full overflow-x-auto">
-          <table className="min-w-full text-left border-collapse shadow rounded-lg">
-            <thead>
-              <tr className="bg-blue-600 text-white">
-                <th className="p-3">Placa</th>
-                <th className="p-3">Marca</th>
-                <th className="p-3">Modelo</th>
-                <th className="p-3">Cor</th>
-                <th className="p-3">Morador</th>
-                <th className="p-3">Vaga</th>
-                <th className="p-3">Ativo</th>
-                <th className="p-3">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {veiculos.map((v, i) => (
-                <tr
-                  key={v._id}
-                  className={`border-b dark:border-gray-700 ${
-                    i % 2 === 0
-                      ? "bg-gray-50 dark:bg-gray-700"
-                      : "bg-white dark:bg-gray-800"
-                  }`}
-                >
-                  <td className="p-3">{v.placa}</td>
-                  <td className="p-3">{v.marca}</td>
-                  <td className="p-3">{v.modelo}</td>
-                  <td className="p-3">{v.cor}</td>
-                  <td className="p-3">{v.morador?.nome}</td>
-                  <td className="p-3">{v.vaga}</td>
-                  <td className="p-3">{v.ativo ? "Sim" : "Não"}</td>
-                  <td className="p-3 flex gap-2">
-                    <button
-                      onClick={() => openEditModal(v)}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded transition"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => openConfirmDeleteModal(v._id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition"
-                    >
-                      Deletar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {/* GRID DE CARDS RESPONSIVO */}
+         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {veiculos.length > 0 ? (
+            veiculos.map((veiculo) => (
+              <CardVeiculo
+                key={veiculo._id}
+                veiculo={veiculo}
+                onEdit={openEditModal}
+                onDelete={openConfirmDeleteModal}
+              />
+            ))
+          ) : (
+           
+            <EmptyState
+              icon={<Car size={24} className="text-gray-500 dark:text-gray-400" />}
+              message="Nenhum veículo cadastrado"
+              description="Comece cadastrando o primeiro veículo para vê-lo aqui."
+            >
+              <button
+                onClick={openCreateModal}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
+              >
+                Cadastrar Veículo
+              </button>
+            </EmptyState>
+          )}
         </div>
-
-        <ModalCadastro
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
-          onSave={handleSave}
-          editing={editing}
-          formData={formData}
-          setFormData={setFormData}
-          modalTitle={editing ? "Veículo" : "Veículo"}
-          fields={VEICULO_FIELDS}
-        />
-
-        <ModalConfirmacao
-          isOpen={showConfirmModal}
-          onClose={() => setShowConfirmModal(false)}
-          onConfirm={handleConfirmDelete}
-          message="Deseja realmente deletar este veículo?"
-        />
       </div>
 
+      {/* MODAIS */}
+      <ModalCadastro
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSave={handleSave}
+        titulo={editing ? "Editar Veículo" : "Cadastrar Veículo"}
+        campos={VEICULO_FIELDS}
+        formData={formData}
+        setFormData={setFormData}
+      />
+      <ModalConfirmacao
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleConfirmDelete}
+        message="Deseja realmente deletar este veículo?"
+      />
       <Toast toast={toast} setToast={setToast} />
     </>
   );

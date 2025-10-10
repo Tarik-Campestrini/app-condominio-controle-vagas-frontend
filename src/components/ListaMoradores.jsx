@@ -1,15 +1,18 @@
-
+import CardSkeleton from "../components/CardSkeleton";
 import React, { useEffect, useState } from "react";
+import EmptyState from "../components/ui/EmptyState";
+import { Users } from "lucide-react"; //
 import api from "../service/api";
 import ModalCadastro from "../components/ui/Modal/ModalCadastro";
 import ModalConfirmacao from "../components/ui/Modal/ModalConfirmacao";
 import Toast from "../components/ui/Toast";
+import CardMorador from "../components/CardMorador";
+
+
 
 export default function ListaMoradores() {
   const [moradores, setMoradores] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Controle do modal de Cadastro/Edição
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState({
@@ -19,22 +22,18 @@ export default function ListaMoradores() {
     bloco: "",
     apartamento: "",
   });
-
-  // Estado para Notificações Toast e Modais
-  const [toast, setToast] = useState({ message: '', type: '' });
+  const [toast, setToast] = useState({ message: "", type: "" });
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
 
-  // Define os campos para o modal de Morador (para reutilização)
   const MORADOR_FIELDS = [
-    { name: "nome", placeholder: "Nome" },
-    { name: "email", placeholder: "Email", type: "email" },
-    { name: "bloco", placeholder: "Bloco" },
-    { name: "apartamento", placeholder: "Apartamento" },
-    { name: "telefone", placeholder: "Telefone" }
+    { name: "nome", placeholder: "Nome", required: true },
+    { name: "email", placeholder: "Email", type: "email", required: true },
+    { name: "bloco", placeholder: "Bloco", required: true },
+    { name: "apartamento", placeholder: "Apartamento", required: true },
+    { name: "telefone", placeholder: "Telefone", required: true },
   ];
 
-  // Buscar moradores
   const fetchMoradores = async () => {
     try {
       const res = await api.get("/moradores");
@@ -51,14 +50,12 @@ export default function ListaMoradores() {
     fetchMoradores();
   }, []);
 
-  // Abrir modal para criar
   const openCreateModal = () => {
     setEditing(null);
     setFormData({ nome: "", email: "", telefone: "", bloco: "", apartamento: "" });
     setShowModal(true);
   };
 
-  // Abrir modal para editar
   const openEditModal = (morador) => {
     setEditing(morador._id);
     setFormData({
@@ -71,148 +68,132 @@ export default function ListaMoradores() {
     setShowModal(true);
   };
 
-  // Salvar (criar/editar) - Função chamada pelo ModalCadastro
-  const handleSave = async (e) => {
-    e.preventDefault();
+  const handleSave = async (data) => {
     const isEditing = !!editing;
     try {
       if (isEditing) {
-        await api.put(`/moradores/${editing}`, formData);
+        await api.put(`/moradores/${editing}`, data);
       } else {
-        await api.post("/moradores", formData);
+        await api.post("/moradores", data);
       }
       fetchMoradores();
       setShowModal(false);
-
       const message = isEditing ? "Morador atualizado com sucesso!" : "Morador cadastrado com sucesso!";
       setToast({ message, type: "success" });
-
     } catch (error) {
       console.error("Erro ao salvar:", error);
-      setToast({ message: "E-mail do morador  já cadastrado.", type: "error" });
+      setToast({ message: "E-mail do morador já cadastrado.", type: "error" });
     }
   };
 
-  // Abrir Modal de Confirmação (substitui window.confirm)
   const openConfirmDeleteModal = (id) => {
     setItemToDelete(id);
     setShowConfirmModal(true);
   };
 
-  // Confirmação de Deleção (chamada pelo ModalConfirmacao)
   const handleConfirmDelete = async () => {
     const id = itemToDelete;
     setShowConfirmModal(false);
     setItemToDelete(null);
-
     try {
       await api.delete(`/moradores/${id}`);
       fetchMoradores();
-
       setToast({ message: "Morador deletado com sucesso!", type: "success" });
-
     } catch (error) {
       console.error("Erro ao deletar:", error);
       setToast({ message: "Erro ao deletar morador.", type: "error" });
     }
   };
 
-  if (loading) return <p className="text-center py-10 text-gray-900 dark:text-gray-200">Carregando...</p>;
+  if (loading) {
+    return (
+      <div className="p-4 sm:p-6">
+        {/* Cabeçalho estático enquanto carrega */}
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">
+            Gestão de Moradores
+          </h2>
+          <div className="bg-gray-200 dark:bg-gray-700 h-10 w-24 rounded-lg animate-pulse"></div>
+        </div>
 
-  
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+
+          {Array.from({ length: 6 }).map((_, index) => (
+            <CardSkeleton key={index} />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    // Fragmento (<>) permite retornar múltiplos elementos sem uma div wrapper
     <>
-      <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 overflow-x-auto text-gray-900 dark:text-gray-200">
+      <div className="p-4 sm:p-6">
 
-        {/* Cabeçalho (Botão e Título) */}
-        <div className="grid grid-cols-3 items-center mb-6">
-          <div className="col-span-1"></div>
+        <div className="flex flex-col sm:relative sm:flex-row sm:justify-center items-center mb-6 gap-4 sm:h-10">
 
-          {/* Título Centralizado */}
-          <h2 className="text-3xl font-extrabold dark:text-white flex justify-center col-span-1">Gestão de Moradores</h2>
 
-          {/* Botão Cadastrar (Alinhado à direita) */}
-          <div className="flex justify-end col-span-1">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white text-center">
+            Cadastro de Moradores
+          </h2>
+
+
+          <div className="w-full sm:w-auto sm:absolute sm:right-0">
             <button
               onClick={openCreateModal}
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition w-full sm:w-auto"
             >
               Cadastrar
             </button>
           </div>
         </div>
+        
 
-        {/* Tabela de Moradores */}
-        <div className="w-full overflow-x-auto">
-          <table className="min-w-full text-left border-collapse shadow rounded-lg">
-            <thead>
-              <tr className="bg-blue-600 text-white">
-                <th className="p-3">Nome</th>
-                <th className="p-3">Email</th>
-                <th className="p-3">Telefone</th>
-                <th className="p-3">Bloco</th>
-                <th className="p-3">Apartamento</th>
-                <th className="p-3">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {moradores.map((morador, index) => (
-                <tr
-                  key={morador._id}
-                  className={`border-b dark:border-gray-700 
-                              ${index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-700' : 'bg-white dark:bg-gray-800'}`}
-                >
-                  <td className="p-3">{morador.nome}</td>
-                  <td className="p-3">{morador.email}</td>
-                  <td className="p-3">{morador.telefone}</td>
-                  <td className="p-3">{morador.bloco}</td>
-                  <td className="p-3">{morador.apartamento}</td>
-                  <td className="p-3 flex gap-2">
-                    <button
-                      onClick={() => openEditModal(morador)}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded transition"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => openConfirmDeleteModal(morador._id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition"
-                    >
-                      Deletar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {moradores.length > 0 ? (
+            moradores.map((morador) => (
+              <CardMorador
+                key={morador._id}
+                morador={morador}
+                onEdit={openEditModal}
+                onDelete={openConfirmDeleteModal}
+              />
+            ))
+          ) : (
+            <EmptyState
+              icon={<Users size={24} className="text-gray-500 dark:text-gray-400" />}
+              message="Nenhum morador cadastrado"
+              description="Comece cadastrando o primeiro morador para vê-lo aqui."
+            >
+              <button
+                onClick={openCreateModal}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
+              >
+                Cadastrar Morador
+              </button>
+            </EmptyState>
+          )}
         </div>
-
-        {/* MODAIS (Renderizados dentro do container principal, mas flutuam com z-50) */}
-        <ModalCadastro
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
-          onSave={handleSave}
-          editing={editing}
-          formData={formData}
-          setFormData={setFormData}
-          modalTitle={editing ? " Morador" : " Morador"}
-          fields={MORADOR_FIELDS}
-        />
-
-        <ModalConfirmacao
-          isOpen={showConfirmModal}
-          onClose={() => setShowConfirmModal(false)}
-          onConfirm={handleConfirmDelete}
-          message="Deseja realmente deletar este morador?"
-        />
-
       </div>
 
-      {/* O TOAST É RENDERIZADO FORA DO CONTAINER PRINCIPAL PARA GARANTIR O FIXED */}
+      {/* MODAIS */}
+      <ModalCadastro
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSave={handleSave}
+        titulo={editing ? "Editar Morador" : "Cadastrar Morador"}
+        campos={MORADOR_FIELDS}
+        formData={formData}
+        setFormData={setFormData}
+      />
+      <ModalConfirmacao
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleConfirmDelete}
+        message="Deseja realmente deletar este morador?"
+      />
       <Toast toast={toast} setToast={setToast} />
-
     </>
   );
 }

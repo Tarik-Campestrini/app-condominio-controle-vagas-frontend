@@ -1,7 +1,8 @@
-import { Sun, Moon } from "lucide-react";
+import React from "react";
+import { Sun, Moon, Home, Users, Car } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-// Função para verificar a preferência inicial do tema (continua a mesma)
 const getInitialTheme = () => {
   const savedTheme = localStorage.getItem("theme");
   if (savedTheme) {
@@ -12,6 +13,7 @@ const getInitialTheme = () => {
 
 export default function Navbar() {
   const [darkMode, setDarkMode] = useState(getInitialTheme);
+  const location = useLocation(); // Hook para saber a página atual
 
   useEffect(() => {
     if (darkMode) {
@@ -27,50 +29,89 @@ export default function Navbar() {
     setDarkMode(!darkMode);
   };
 
+  const menuItems = [
+    { path: "/vagas", label: "Vagas", icon: <Home size={16} /> },
+    { path: "/moradores", label: "Moradores", icon: <Users size={16} /> },
+    { path: "/veiculos", label: "Veículos", icon: <Car size={16} /> },
+  ];
+
   return (
-    <header className="relative border-b bg-white dark:bg-gray-900 shadow-md">
-      <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 text-center py-3">
-        Controle de Vagas
-      </h1>
-
-      {/* --- NOVO COMPONENTE TOGGLE SWITCH --- */}
-      <div className="absolute top-1/2 -translate-y-1/2 right-4">
-        <label htmlFor="theme-switch" className="relative inline-flex items-center cursor-pointer">
-          {/* Input invisível que controla o estado */}
-          <input
-            type="checkbox"
-            id="theme-switch"
-            className="sr-only peer"
-            checked={darkMode}
-            onChange={toggleTheme}
-          />
+    // O header agora tem um fundo branco/escuro e uma sombra
+    <header className="bg-white dark:bg-gray-900 shadow-sm sticky top-0 z-40">
+      {/* Container principal para alinhar itens */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative flex items-center justify-between h-16">
           
-          {/* O fundo do switch (a "trilha") */}
-          <div
-            className="w-14 h-7 rounded-full
-                       bg-gradient-to-r from-amber-400 to-orange-500
-                       peer-checked:bg-gradient-to-r peer-checked:from-blue-500 peer-checked:to-indigo-600
-                       transition-colors duration-300"
-          ></div>
-
-          {/* O círculo que desliza (o "thumb") */}
-          <div
-            className="absolute top-[2px] left-[2px] 
-                       w-6 h-6 rounded-full 
-                       bg-white
-                       flex items-center justify-center
-                       peer-checked:translate-x-[28px]
-                       transition-all duration-300 ease-in-out"
-          >
-            {/* Ícone dentro do círculo */}
-            {darkMode ? (
-              <Moon size={16} className="text-blue-500" />
-            ) : (
-              <Sun size={16} className="text-orange-500" />
-            )}
+          {/* Título principal à esquerda */}
+          <div className="flex-shrink-0">
+            <h1 className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
+              Gestão de Vagas
+            </h1>
           </div>
-        </label>
+
+          {/* Navegação de Abas no Centro */}
+          <nav className="hidden sm:flex sm:justify-center sm:w-full">
+            <div className="flex space-x-4">
+              {menuItems.map((item) => {
+                const isActive = location.pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium
+                      transition-colors duration-200
+                      ${
+                        isActive
+                          ? "text-indigo-600 dark:text-white border-b-2 border-indigo-500"
+                          : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                      }`}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </nav>
+
+          {/* Botão de Tema à Direita */}
+          <div className="absolute inset-y-0 right-0 flex items-center">
+            {/* ... (código do toggle switch continua o mesmo) ... */}
+            <label htmlFor="theme-switch" className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="theme-switch" className="sr-only peer" checked={darkMode} onChange={toggleTheme} />
+              <div className="w-14 h-7 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 peer-checked:bg-gradient-to-r peer-checked:from-blue-500 peer-checked:to-indigo-600 transition-colors duration-300"></div>
+              <div className="absolute top-[2px] left-[2px] w-6 h-6 rounded-full bg-white flex items-center justify-center peer-checked:translate-x-[28px] transition-all duration-300 ease-in-out">
+                {darkMode ? <Moon size={16} className="text-blue-500" /> : <Sun size={16} className="text-orange-500" />}
+              </div>
+            </label>
+          </div>
+
+        </div>
       </div>
+       {/* Navegação Mobile (aparece abaixo em telas pequenas) */}
+       <nav className="sm:hidden bg-gray-50 dark:bg-gray-800 py-2">
+            <div className="flex justify-center space-x-4">
+              {menuItems.map((item) => {
+                const isActive = location.pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium
+                      transition-colors duration-200
+                      ${
+                        isActive
+                          ? "bg-indigo-100 text-indigo-700 dark:bg-gray-700 dark:text-white"
+                          : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      }`}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </nav>
     </header>
   );
 }

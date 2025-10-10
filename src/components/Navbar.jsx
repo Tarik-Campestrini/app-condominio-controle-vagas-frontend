@@ -2,6 +2,7 @@ import React from "react";
 import { Sun, Moon, Home, Users, Car } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
+import logo from '../assets/logo.png'; // Importa a sua logo
 
 const getInitialTheme = () => {
   const savedTheme = localStorage.getItem("theme");
@@ -13,7 +14,7 @@ const getInitialTheme = () => {
 
 export default function Navbar() {
   const [darkMode, setDarkMode] = useState(getInitialTheme);
-  const location = useLocation(); // Hook para saber a página atual
+  const location = useLocation();
 
   useEffect(() => {
     if (darkMode) {
@@ -36,17 +37,22 @@ export default function Navbar() {
   ];
 
   return (
-    // O header agora tem um fundo branco/escuro e uma sombra
     <header className="bg-white dark:bg-gray-900 shadow-sm sticky top-0 z-40">
-      {/* Container principal para alinhar itens */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative flex items-center justify-between h-16">
           
-          {/* Título principal à esquerda */}
+          {/* --- ÁREA CORRIGIDA: Logo e Texto Juntos --- */}
           <div className="flex-shrink-0">
-            <h1 className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
-              Gestão de Vagas
-            </h1>
+            <Link to="/vagas" className="flex items-center gap-3">
+              <img
+                className="h-20 w-auto" 
+                src={logo}
+                alt="Logo"
+              />
+              <span className="text-xl font-bold text-indigo-600 dark:text-indigo-400 hidden sm:block">
+                Controle de Vagas
+              </span>
+            </Link>
           </div>
 
           {/* Navegação de Abas no Centro */}
@@ -76,7 +82,6 @@ export default function Navbar() {
 
           {/* Botão de Tema à Direita */}
           <div className="absolute inset-y-0 right-0 flex items-center">
-            {/* ... (código do toggle switch continua o mesmo) ... */}
             <label htmlFor="theme-switch" className="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" id="theme-switch" className="sr-only peer" checked={darkMode} onChange={toggleTheme} />
               <div className="w-14 h-7 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 peer-checked:bg-gradient-to-r peer-checked:from-blue-500 peer-checked:to-indigo-600 transition-colors duration-300"></div>
@@ -88,7 +93,7 @@ export default function Navbar() {
 
         </div>
       </div>
-       {/* Navegação Mobile (aparece abaixo em telas pequenas) */}
+       {/* Navegação Mobile */}
        <nav className="sm:hidden bg-gray-50 dark:bg-gray-800 py-2">
             <div className="flex justify-center space-x-4">
               {menuItems.map((item) => {

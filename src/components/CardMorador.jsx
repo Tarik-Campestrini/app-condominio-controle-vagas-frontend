@@ -1,5 +1,3 @@
-// src/components/CardMorador.jsx
-
 import React from "react";
 import { User, Edit, Trash2 } from "lucide-react";
 

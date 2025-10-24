@@ -2,7 +2,7 @@ import React from "react";
 import { Sun, Moon, Home, Users, Car } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import logo from '../assets/logo.png'; // Importa a sua logo
+import logo from '../assets/logo.png'; 
 
 const getInitialTheme = () => {
   const savedTheme = localStorage.getItem("theme");
@@ -40,8 +40,8 @@ export default function Navbar() {
     <header className="bg-white dark:bg-gray-900 shadow-sm sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative flex items-center justify-between h-16">
-          
-          {/* --- ÁREA CORRIGIDA: Logo e Texto Juntos --- */}
+
+          {/* --- ÁREA : Logo  --- */}
           <div className="flex-shrink-0">
             <Link to="/vagas" className="flex items-center gap-3">
               <img
@@ -49,9 +49,7 @@ export default function Navbar() {
                 src={logo}
                 alt="Logo"
               />
-              <span className="text-xl font-bold text-indigo-600 dark:text-indigo-400 hidden sm:block">
-                Controle de Vagas
-              </span>
+              
             </Link>
           </div>
 

@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
-import { CheckCircle2, AlertTriangle, X } from 'lucide-react'; // Importando ícones
+import { CheckCircle2, AlertTriangle, X } from 'lucide-react'; 
 
 /**
- * Componente Toast (Notificação Flutuante)
+ * Componente Toast (Notificação )
  * @param {object} toast - Contém {message: string, type: 'success' | 'error'}.
  * @param {function} setToast - Função para resetar o estado do toast.
  */
@@ -47,7 +47,7 @@ export default function Toast({ toast, setToast }) {
   const currentStyle = styleMap[toast.type] || styleMap.success;
 
   return (
-    // Posicionamento no canto superior direito com animação de entrada
+    // Posicionamento no canto superior direito
     <div 
       className={`fixed top-5 right-5 w-auto max-w-sm p-4 rounded-lg shadow-lg border-l-4 
                   transition-transform transform duration-300 ease-out z-50

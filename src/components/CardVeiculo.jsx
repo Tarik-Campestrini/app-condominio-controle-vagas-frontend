@@ -1,12 +1,10 @@
-// src/components/CardVeiculo.jsx
-
 import React from "react";
 import { Car, Edit, Trash2 } from "lucide-react";
 
 export default function CardVeiculo({ veiculo, onEdit, onDelete }) {
   return (
     <div className="flex flex-col justify-between rounded-lg p-4 shadow-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 h-full">
-      {/* Seção de Informações Principais */}
+      
       <div>
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">

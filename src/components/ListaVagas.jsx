@@ -1,14 +1,13 @@
-// ListaVagas.jsx
-
 import React, { useEffect, useState } from "react";
 import CardVaga from "./CardVaga";
 import CardSkeleton from "../components/CardSkeleton";
 import api from "../service/api";
-import ModalOcuparVaga from "./ui/Modal/ModalOcuparVaga"; // Importando o modal correto
+import ModalOcuparVaga from "./ui/Modal/ModalOcuparVaga"; 
 import ModalConfirmacao from "./ui/Modal/ModalConfirmacao";
 import Toast from "../components/ui/Toast";
 import EmptyState from "../components/ui/EmptyState";
 import { ParkingCircle } from "lucide-react";
+
 
 export default function ListarVagas() {
   const [vagas, setVagas] = useState([]);
@@ -54,18 +53,40 @@ export default function ListarVagas() {
     setVagaSelecionada(null);
   };
 
-  const handleSalvarOcupacao = async (dadosDoFormulario) => {
-    if (!vagaSelecionada) return;
-    try {
-      await api.put(`/vagas/${vagaSelecionada._id}/ocupar`, dadosDoFormulario);
-      handleFecharModal();
-      await fetchData();
-      setToast({ message: `Vaga ${vagaSelecionada.identificador} ocupada com sucesso!`, type: "success" });
-    } catch (error) {
-      console.error("Erro ao ocupar vaga:", error);
-      setToast({ message: "Erro ao ocupar vaga.", type: "error" });
+  // Função para salvar a ocupação da vaga
+ const handleSalvarOcupacao = async (dadosDoFormulario) => {
+  if (!vagaSelecionada) return;
+  try {
+    // Captura a resposta completa da API
+    const response = await api.put(`/vagas/${vagaSelecionada._id}/ocupar`, dadosDoFormulario);
+    
+    handleFecharModal();
+    await fetchData(); // Recarrega os dados
+
+    // Mostra o Toast de sucesso principal
+    setToast({ message: `Vaga ${vagaSelecionada.identificador} ocupada com sucesso!`, type: "success" });
+
+    // Verifica o status da notificação na resposta
+    const notificationInfo = response.data?.notification;
+    if (notificationInfo && notificationInfo.attempted && !notificationInfo.success) {
+
+      // Se tentou enviar e falhou, mostra um Toast de erro adicional
+      // Usamos setTimeout para que o Toast de erro apareça *depois* do de sucesso
+      setTimeout(() => {
+        setToast({ 
+          message: `Alerta: Falha ao enviar notificação WhatsApp. (${notificationInfo.error || 'Erro desconhecido'})`, 
+          type: "error" 
+        });
+      }, 700); // delay de 0.7s depois do Toast de sucesso
     }
-  };
+
+  } catch (error) {
+    console.error("Erro ao ocupar vaga:", error);
+    
+    // Mostra erro se a própria requisição de ocupar vaga falhar
+    setToast({ message: error.response?.data?.error || "Erro ao ocupar vaga.", type: "error" });
+  }
+};
 
   const handleOpenConfirmModal = (id) => {
     setItemParaLiberar(id);
@@ -110,7 +131,7 @@ export default function ListarVagas() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold text-center mb-6 text-gray-800 dark:text-white">Vagas</h1>
+      <h2 className="text-2xl font-bold text-center mb-6 text-gray-800 dark:text-white">Gestão de Vagas</h2>
       <div className="max-w-5xl mx-auto mb-6">
         <input type="text" placeholder="Pesquisar por vaga, ocupante, placa..." value={busca} onChange={(e) => setBusca(e.target.value)} className="w-full p-3 rounded-lg shadow-sm border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-gray-800 dark:text-white" />
       </div>

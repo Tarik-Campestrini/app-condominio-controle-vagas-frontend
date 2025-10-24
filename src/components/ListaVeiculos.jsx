@@ -115,9 +115,6 @@ export default function ListaVeiculos() {
     }
   };
 
-  // Campos do formulário
-  // Adiciona o campo "morador" como select
-  // Popula as opções com os moradores carregados
   const VEICULO_FIELDS = [
     { name: "placa", placeholder: "Placa", required: true },
     { name: "marca", placeholder: "Marca", required: true },

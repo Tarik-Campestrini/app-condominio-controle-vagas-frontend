@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
 
-/**
- * Componente ModalCadastro HÍBRIDO (Controlado ou Autônomo)
- * Agora com suporte para campos do tipo 'select'.
- */
 export default function ModalCadastro({
   isOpen,
   onClose,
@@ -44,8 +40,9 @@ export default function ModalCadastro({
         </h3>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* 👇 LÓGICA CORRIGIDA AQUI 👇 */}
+          
           {campos.map((field) =>
+
             // Verifica se o tipo do campo é 'select'
             field.type === "select" ? (
               <select

@@ -8,7 +8,7 @@ import React from "react";
  * @param {string} message - Mensagem exibida no corpo do modal.
  */
 
-// Verifica o estado do Dark Mode para aplicar o estilo inline (solução robusta)
+// Verifica o estado do Dark Mode para aplicar o estilo inline 
 const isDarkMode = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
 export default function ModalConfirmacao({ isOpen, onClose, onConfirm, message }) {

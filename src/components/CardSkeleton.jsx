@@ -1,5 +1,3 @@
-// src/components/CardSkeleton.jsx
-
 import React from "react";
 
 export default function CardSkeleton() {

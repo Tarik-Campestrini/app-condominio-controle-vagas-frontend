@@ -1,7 +1,7 @@
 import CardSkeleton from "../components/CardSkeleton";
 import React, { useEffect, useState } from "react";
 import EmptyState from "../components/ui/EmptyState";
-import { Users } from "lucide-react"; //
+import { Users } from "lucide-react"; 
 import api from "../service/api";
 import ModalCadastro from "../components/ui/Modal/ModalCadastro";
 import ModalConfirmacao from "../components/ui/Modal/ModalConfirmacao";
@@ -9,7 +9,7 @@ import Toast from "../components/ui/Toast";
 import CardMorador from "../components/CardMorador";
 
 
-
+// ListaMoradores
 export default function ListaMoradores() {
   const [moradores, setMoradores] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +34,7 @@ export default function ListaMoradores() {
     { name: "telefone", placeholder: "Telefone", required: true },
   ];
 
+  // Função para buscar moradores
   const fetchMoradores = async () => {
     try {
       const res = await api.get("/moradores");
@@ -56,6 +57,7 @@ export default function ListaMoradores() {
     setShowModal(true);
   };
 
+  // Função para abrir o modal de edição
   const openEditModal = (morador) => {
     setEditing(morador._id);
     setFormData({
@@ -68,6 +70,7 @@ export default function ListaMoradores() {
     setShowModal(true);
   };
 
+  // Função para salvar dados (criar ou editar)
   const handleSave = async (data) => {
     const isEditing = !!editing;
     try {
@@ -86,11 +89,13 @@ export default function ListaMoradores() {
     }
   };
 
+  // Função para abrir o modal de confirmação de exclusão
   const openConfirmDeleteModal = (id) => {
     setItemToDelete(id);
     setShowConfirmModal(true);
   };
 
+  // Função para confirmar a exclusão
   const handleConfirmDelete = async () => {
     const id = itemToDelete;
     setShowConfirmModal(false);
@@ -105,6 +110,7 @@ export default function ListaMoradores() {
     }
   };
 
+  // Renderização do componente
   if (loading) {
     return (
       <div className="p-4 sm:p-6">
@@ -127,6 +133,7 @@ export default function ListaMoradores() {
     );
   }
 
+  
   return (
     <>
       <div className="p-4 sm:p-6">
@@ -135,7 +142,7 @@ export default function ListaMoradores() {
 
 
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white text-center">
-            Cadastro de Moradores
+            Gestão de Moradores
           </h2>
 
 

@@ -1,10 +1,11 @@
-/* eslint-disable no-unused-vars */
+// src/pages/Login/index.jsx
+
 import React, { useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../../service/api'; 
-// import { AuthContext } from '../../contexts/AuthContext'; // Descomente quando o context estiver pronto
-import logo from '../../assets/logo.png';
-import { Sun, Moon } from 'lucide-react'; 
+import { useNavigate, useLocation } from 'react-router-dom';
+import api from '../../service/api'; // Verifique se o caminho está correto
+import { AuthContext } from '../../contexts/AuthContext'; // Importar o Context
+import logo from '../../assets/logo.png'; // Verifique se o caminho e a extensão (.png) estão corretos
+import { Sun, Moon } from 'lucide-react'; // Importar ícones do tema
 
 // Função para verificar a preferência inicial do tema
 const getInitialTheme = () => {
@@ -12,8 +13,8 @@ const getInitialTheme = () => {
   if (savedTheme) {
     return savedTheme === "dark";
   }
-  // Se não houver tema salvo, verifica a preferência do sistema
-  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  // Se não houver tema salvo, retorna null para que o useEffect decida
+  return null;
 };
 
 export default function LoginPage() {
@@ -22,13 +23,46 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  // const { login } = useContext(AuthContext); // Guardaremos para usar com o Context API
+  const location = useLocation();
 
-  
-  const [darkMode, setDarkMode] = useState(getInitialTheme);
+  // --- Lógica do Tema Aprimorada ---
+  const [darkMode, setDarkMode] = useState(getInitialTheme()); // Pode iniciar como null
 
-  
   useEffect(() => {
+    let currentDarkMode;
+    const savedTheme = localStorage.getItem("theme");
+
+    if (savedTheme !== null) {
+      // Se há tema salvo, usa ele
+      currentDarkMode = savedTheme === "dark";
+    } else {
+      // Se NÃO há tema salvo, verifica a preferência do sistema
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      currentDarkMode = prefersDark;
+      // Salva a preferência detectada para futuras visitas
+      localStorage.setItem("theme", currentDarkMode ? "dark" : "light");
+    }
+
+    // Aplica a classe ao HTML
+    if (currentDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+
+    // Atualiza o estado do React SE necessário (especialmente se iniciou como null)
+    if (darkMode === null || currentDarkMode !== darkMode) {
+        setDarkMode(currentDarkMode);
+    }
+  // Executa SÓ na montagem inicial para detectar preferência do sistema
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Aplica a classe dark e salva no storage QUANDO o estado darkMode muda (por clique no botão)
+  useEffect(() => {
+    // Evita rodar na montagem inicial se darkMode ainda for null
+    if (darkMode === null) return;
+
     if (darkMode) {
       document.documentElement.classList.add("dark");
       localStorage.setItem("theme", "dark");
@@ -38,10 +72,15 @@ export default function LoginPage() {
     }
   }, [darkMode]);
 
-  // Função para alternar o tema
+
+  // Função para alternar o tema manualmente
   const toggleTheme = () => {
-    setDarkMode(!darkMode);
+    setDarkMode(prevMode => !prevMode); // Alterna o estado
   };
+  // --- Fim da Lógica do Tema ---
+
+  // Obter a função 'login' do Contexto de Autenticação
+  const { login } = useContext(AuthContext);
 
   // Função para lidar com o envio do formulário de login
   const handleSubmit = async (e) => {
@@ -57,19 +96,17 @@ export default function LoginPage() {
       const { token } = response.data; // Extrai o token da resposta
 
       if (token) {
-        // --- SALVANDO O TOKEN E REDIRECIONANDO (VERSÃO SEM CONTEXT) ---
-        localStorage.setItem('authToken', token); // Salva o token no localStorage
-        console.log("Login bem-sucedido, token salvo!");
+        console.log("Login API OK, chamando context.login()...");
+        // Chama a função 'login' do Contexto AuthContext
+        // Ela salva o token no localStorage E atualiza o estado isAuthenticated
+        login(token);
 
-        // Limpa o formulário após o sucesso
-        setEmail('');
-        setPassword('');
+        console.log("Redirecionando após login...");
 
-        // Redireciona para a página principal (ex: /vagas)
-        navigate('/vagas');
-        // --- FIM DA VERSÃO SEM CONTEXT ---
+        // Redireciona para a página de origem (se veio de um ProtectedRoute) ou para /vagas
+        const from = location.state?.from?.pathname || "/vagas";
+        navigate(from, { replace: true }); // replace: true melhora o histórico do navegador
 
-        // login(token); // -> Linha a ser usada quando o AuthContext estiver pronto
       } else {
         // Caso a API retorne sucesso mas sem token (improvável, mas seguro verificar)
         setError('Falha no login. Token não recebido.');
@@ -84,6 +121,7 @@ export default function LoginPage() {
     }
   };
 
+  // Renderização do componente
   return (
     // Container principal da página
     <div className="relative flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950 px-4 py-12">
@@ -91,7 +129,7 @@ export default function LoginPage() {
       {/* Botão de Tema no canto superior direito */}
       <div className="absolute top-4 right-4 z-10">
         <label htmlFor="theme-switch-login" className="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="theme-switch-login" className="sr-only peer" checked={darkMode} onChange={toggleTheme} />
+          <input type="checkbox" id="theme-switch-login" className="sr-only peer" checked={!!darkMode} onChange={toggleTheme} />
           <div className="w-14 h-7 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 peer-checked:bg-gradient-to-r peer-checked:from-blue-500 peer-checked:to-indigo-600 transition-colors duration-300"></div>
           <div className="absolute top-[2px] left-[2px] w-6 h-6 rounded-full bg-white flex items-center justify-center peer-checked:translate-x-[28px] transition-all duration-300 ease-in-out">
             {darkMode ? <Moon size={16} className="text-blue-500" /> : <Sun size={16} className="text-orange-500" />}
@@ -157,8 +195,9 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading} // Desabilita durante o carregamento
-            className={`w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out flex items-center justify-center text-base ${loading ? 'opacity-50 cursor-not-allowed' : '' // Estilo quando desabilitado
-              }`}
+            className={`w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out flex items-center justify-center text-base ${
+              loading ? 'opacity-50 cursor-not-allowed' : '' // Estilo quando desabilitado
+            }`}
           >
             {loading ? ( // Mostra spinner se estiver carregando
               <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

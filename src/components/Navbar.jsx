@@ -2,8 +2,11 @@ import React from "react";
 import { Sun, Moon, Home, Users, Car } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import logo from '../assets/logo.png'; 
 
+import logoLight from '../assets/logo-light.png'; 
+import logoDark from '../assets/logo-dark.png'; 
+
+// Função para verificar a preferência inicial do tema
 const getInitialTheme = () => {
   const savedTheme = localStorage.getItem("theme");
   if (savedTheme) {
@@ -41,17 +44,20 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative flex items-center justify-between h-16">
 
-          {/* --- ÁREA : Logo  --- */}
+          
           <div className="flex-shrink-0">
-            <Link to="/vagas" className="flex items-center gap-3">
+            <Link to="/vagas"> 
               <img
-                className="h-20 w-auto" 
-                src={logo}
+                // Usa o estado darkMode para escolher a logo
+                src={darkMode ? logoDark : logoLight}
                 alt="Logo"
+                
+                className="h-20 w-auto" 
               />
-              
             </Link>
           </div>
+          
+
 
           {/* Navegação de Abas no Centro */}
           <nav className="hidden sm:flex sm:justify-center sm:w-full">

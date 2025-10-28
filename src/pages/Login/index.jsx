@@ -1,68 +1,44 @@
-// src/pages/Login/index.jsx
-
-import React, { useState, useEffect, useContext } from 'react';
+import React from 'react'; 
+import { useState, useContext, useEffect } from 'react'; 
 import { useNavigate, useLocation } from 'react-router-dom';
-import api from '../../service/api'; // Verifique se o caminho está correto
-import { AuthContext } from '../../contexts/AuthContext'; // Importar o Context
-import logo from '../../assets/logo.png'; // Verifique se o caminho e a extensão (.png) estão corretos
-import { Sun, Moon } from 'lucide-react'; // Importar ícones do tema
+import api from '../../service/api'; 
+import { AuthContext } from '../../contexts/AuthContext'; 
+import logoLight from '../../assets/logo-light.png'; 
+import logoDark from '../../assets/logo-dark.png'; 
+import { Sun, Moon } from 'lucide-react';
 
-// Função para verificar a preferência inicial do tema
-const getInitialTheme = () => {
+// --- LÓGICA DO TEMA REFINADA ---
+// Função síncrona para determinar o estado inicial do tema
+const getInitialDarkMode = () => {
   const savedTheme = localStorage.getItem("theme");
-  if (savedTheme) {
+  if (savedTheme !== null) {
     return savedTheme === "dark";
   }
-  // Se não houver tema salvo, retorna null para que o useEffect decida
-  return null;
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  return false; // Fallback para modo claro
 };
+// --- FIM DA LÓGICA DO TEMA ---
 
 export default function LoginPage() {
+  // Estados do formulário
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Hooks de navegação e contexto
   const navigate = useNavigate();
   const location = useLocation();
+  const { login } = useContext(AuthContext);
 
-  // --- Lógica do Tema Aprimorada ---
-  const [darkMode, setDarkMode] = useState(getInitialTheme()); // Pode iniciar como null
+  // Estado do tema, inicializado pela função síncrona
+  const [darkMode, setDarkMode] = useState(getInitialDarkMode);
 
+  // Efeito para aplicar classe e salvar tema quando o estado 'darkMode' muda
   useEffect(() => {
-    let currentDarkMode;
-    const savedTheme = localStorage.getItem("theme");
-
-    if (savedTheme !== null) {
-      // Se há tema salvo, usa ele
-      currentDarkMode = savedTheme === "dark";
-    } else {
-      // Se NÃO há tema salvo, verifica a preferência do sistema
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      currentDarkMode = prefersDark;
-      // Salva a preferência detectada para futuras visitas
-      localStorage.setItem("theme", currentDarkMode ? "dark" : "light");
-    }
-
-    // Aplica a classe ao HTML
-    if (currentDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-
-    // Atualiza o estado do React SE necessário (especialmente se iniciou como null)
-    if (darkMode === null || currentDarkMode !== darkMode) {
-        setDarkMode(currentDarkMode);
-    }
-  // Executa SÓ na montagem inicial para detectar preferência do sistema
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Aplica a classe dark e salva no storage QUANDO o estado darkMode muda (por clique no botão)
-  useEffect(() => {
-    // Evita rodar na montagem inicial se darkMode ainda for null
-    if (darkMode === null) return;
-
+    // console.log("Aplicando tema:", darkMode ? "dark" : "light"); // Log para depuração
     if (darkMode) {
       document.documentElement.classList.add("dark");
       localStorage.setItem("theme", "dark");
@@ -72,61 +48,47 @@ export default function LoginPage() {
     }
   }, [darkMode]);
 
-
   // Função para alternar o tema manualmente
   const toggleTheme = () => {
-    setDarkMode(prevMode => !prevMode); // Alterna o estado
+    setDarkMode(prevMode => !prevMode);
   };
-  // --- Fim da Lógica do Tema ---
-
-  // Obter a função 'login' do Contexto de Autenticação
-  const { login } = useContext(AuthContext);
 
   // Função para lidar com o envio do formulário de login
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Impede o recarregamento da página
-    setError(''); // Limpa erros anteriores
-    setLoading(true); // Ativa o estado de carregamento
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
-    console.log("Enviando para login:", { email, senha: password }); // Log para depuração
+    console.log("Enviando para login:", { email, senha: password });
 
     try {
-      // Envia as credenciais para a API do backend
       const response = await api.post('/auth/login', { email, senha: password });
-      const { token } = response.data; // Extrai o token da resposta
+      const { token } = response.data;
 
       if (token) {
         console.log("Login API OK, chamando context.login()...");
-        // Chama a função 'login' do Contexto AuthContext
-        // Ela salva o token no localStorage E atualiza o estado isAuthenticated
-        login(token);
+        login(token); // Chama a função do Contexto
 
         console.log("Redirecionando após login...");
-
-        // Redireciona para a página de origem (se veio de um ProtectedRoute) ou para /vagas
-        const from = location.state?.from?.pathname || "/vagas";
-        navigate(from, { replace: true }); // replace: true melhora o histórico do navegador
+        const from = location.state?.from?.pathname || "/vagas"; // Redirecionamento inteligente
+        navigate(from, { replace: true });
 
       } else {
-        // Caso a API retorne sucesso mas sem token (improvável, mas seguro verificar)
         setError('Falha no login. Token não recebido.');
       }
     } catch (err) {
-      // Trata erros da API (ex: 401 Credenciais Inválidas)
-      setError(err.response?.data?.message || 'Erro ao tentar fazer login. Verifique suas credenciais.');
+      setError(err.response?.data?.message || 'Erro ao tentar fazer login.');
       console.error("Erro de login:", err.response?.data || err.message);
     } finally {
-      // Garante que o estado de carregamento seja desativado, com sucesso ou erro
       setLoading(false);
     }
   };
 
   // Renderização do componente
   return (
-    // Container principal da página
     <div className="relative flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950 px-4 py-12">
 
-      {/* Botão de Tema no canto superior direito */}
+      {/* Botão de Tema */}
       <div className="absolute top-4 right-4 z-10">
         <label htmlFor="theme-switch-login" className="relative inline-flex items-center cursor-pointer">
           <input type="checkbox" id="theme-switch-login" className="sr-only peer" checked={!!darkMode} onChange={toggleTheme} />
@@ -137,12 +99,16 @@ export default function LoginPage() {
         </label>
       </div>
 
-      {/* Card do formulário de login */}
+      {/* Card do formulário */}
       <div className="p-8 sm:p-10 max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
 
-        {/* Logo */}
+        {/* Logo Dinâmica */}
         <div className="flex justify-center mb-6">
-          <img src={logo} alt="Logo" className="h-12 w-auto" />
+          <img
+            src={darkMode ? logoDark :  logoLight} // Escolhe a logo baseada no tema
+            alt="Logo"
+            className="h-12 w-auto" // Ajuste a altura conforme necessário
+          />
         </div>
 
         {/* Título */}
@@ -194,17 +160,17 @@ export default function LoginPage() {
           {/* Botão Entrar */}
           <button
             type="submit"
-            disabled={loading} // Desabilita durante o carregamento
+            disabled={loading}
             className={`w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out flex items-center justify-center text-base ${
-              loading ? 'opacity-50 cursor-not-allowed' : '' // Estilo quando desabilitado
+              loading ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
-            {loading ? ( // Mostra spinner se estiver carregando
+            {loading ? (
               <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-            ) : ( // Mostra texto 'Entrar' se não estiver carregando
+            ) : (
               'Entrar'
             )}
           </button>

@@ -215,7 +215,10 @@ export default function ListaVeiculos() {
         isOpen={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
         onConfirm={handleConfirmDelete}
+        title="Confirmar Exclusão"
         message="Deseja realmente deletar este veículo?"
+        isDanger={true}
+        confirmText="Deletar"
       />
       <Toast toast={toast} setToast={setToast} />
     </>

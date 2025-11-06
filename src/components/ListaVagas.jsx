@@ -132,10 +132,7 @@ export default function ListarVagas() {
       setItemParaDeletar(null);
     }
   };
-  // --- Fim das Funções dos Modais ---
-
-
-  // ---> 3. LÓGICA PARA FILTRO DE GRUPO
+  
   
   const getGrupoFromIdentificador = (identificador) => {
     
@@ -148,7 +145,7 @@ export default function ListarVagas() {
     return 'Outros'; 
   };
 
-  // Calcula os grupos únicos disponíveis usando useMemo
+  
   const availableGroups = useMemo(() => {
     const groupSet = new Set(vagas.map(vaga => getGrupoFromIdentificador(vaga.identificador)));
     return ["Todos", ...Array.from(groupSet).sort()];
@@ -282,6 +279,9 @@ export default function ListarVagas() {
         isOpen={showConfirmLiberarModal}
         onClose={() => setShowConfirmLiberarModal(false)}
         onConfirm={handleConfirmarLiberar}
+        title="Confirmar Liberação"
+        confirmText="Liberar"
+        isDanger={false}
         message="Tem certeza que deseja LIBERAR esta vaga?"
       />
       <ModalConfirmacao
@@ -289,6 +289,8 @@ export default function ListarVagas() {
         onClose={() => setShowConfirmDeletarModal(false)}
         onConfirm={handleConfirmarDeletar}
         title="Confirmar Exclusão"
+        confirmText="Deletar"
+        isDanger={true}
         message="Tem certeza que deseja DELETAR esta vaga? Esta ação é permanente."
       />
       <Toast toast={toast} setToast={setToast} />

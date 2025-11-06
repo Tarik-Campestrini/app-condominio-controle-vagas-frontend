@@ -199,6 +199,9 @@ export default function ListaMoradores() {
         onClose={() => setShowConfirmModal(false)}
         onConfirm={handleConfirmDelete}
         message="Deseja realmente deletar este morador?"
+        title="Confirmar Exclusão"
+        isDanger={true}
+        confirmText="Deletar"
       />
       <Toast toast={toast} setToast={setToast} />
     </>

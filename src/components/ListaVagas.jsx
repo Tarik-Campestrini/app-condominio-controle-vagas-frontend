@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react"; // 1. Adicionado useMemo
 import CardVaga from "./CardVaga";
 import CardSkeleton from "../components/CardSkeleton";
 import api from "../service/api";
 import ModalOcuparVaga from "./ui/Modal/ModalOcuparVaga";
-import ModalCadastro from "./ui/Modal/ModalCadastro"; // Import do ModalCadastro
+import ModalCadastro from "./ui/Modal/ModalCadastro";
 import ModalConfirmacao from "./ui/Modal/ModalConfirmacao";
 import Toast from "../components/ui/Toast";
 import EmptyState from "../components/ui/EmptyState";
@@ -17,24 +17,22 @@ export default function ListarVagas() {
   const [busca, setBusca] = useState("");
   const [toast, setToast] = useState({ message: "", type: "" });
 
-  // Estados Modal Ocupar
+  // Estados dos Modais
   const [modalOcuparAberto, setModalOcuparAberto] = useState(false);
   const [vagaSelecionada, setVagaSelecionada] = useState(null);
-  
-  // Estados Modal Criar
   const [modalCriarVagaAberto, setModalCriarVagaAberto] = useState(false);
   const [formDataNovaVaga, setFormDataNovaVaga] = useState({ identificador: "" });
-
-  // Estados Modal Confirmar LIBERAÇÃO
   const [showConfirmLiberarModal, setShowConfirmLiberarModal] = useState(false);
   const [itemParaLiberar, setItemParaLiberar] = useState(null);
-
-  // ---> NOVOS ESTADOS para Modal Confirmar DELEÇÃO
   const [showConfirmDeletarModal, setShowConfirmDeletarModal] = useState(false);
   const [itemParaDeletar, setItemParaDeletar] = useState(null);
 
+  // ---> 2. NOVO ESTADO: Controla o grupo de vagas selecionado
+  const [selectedGroup, setSelectedGroup] = useState("Todos");
+
+  // Função para buscar todos os dados
   const fetchData = async () => {
-    setLoading(true); // Garante que o loading seja reativado a cada busca
+    setLoading(true);
     try {
       const [vagasRes, moradoresRes, veiculosRes] = await Promise.all([
         api.get("/vagas"),
@@ -56,7 +54,7 @@ export default function ListarVagas() {
     fetchData();
   }, []);
 
-  // --- Funções Modal Ocupar ---
+  // --- Funções dos Modais (Ocupar, Criar, Liberar, Deletar) ---
   const handleAbrirModalOcupar = (vaga) => {
     setVagaSelecionada(vaga);
     setModalOcuparAberto(true);
@@ -83,8 +81,6 @@ export default function ListarVagas() {
       setToast({ message: error.response?.data?.error || "Erro ao ocupar vaga.", type: "error" });
     }
   };
-
-  // --- Funções Modal Criar Vaga ---
   const handleAbrirModalCriarVaga = () => {
     setFormDataNovaVaga({ identificador: "" });
     setModalCriarVagaAberto(true);
@@ -100,8 +96,6 @@ export default function ListarVagas() {
       setToast({ message: error.response?.data?.message || "Erro ao criar vaga.", type: "error" });
     }
   };
-
-  // --- Funções Modal Liberar Vaga ---
   const handleOpenConfirmLiberarModal = (id) => {
     setItemParaLiberar(id);
     setShowConfirmLiberarModal(true);
@@ -120,8 +114,6 @@ export default function ListarVagas() {
       setItemParaLiberar(null);
     }
   };
-
-  // ---> NOVAS Funções para DELETAR Vaga ---
   const handleOpenConfirmDeletarModal = (id) => {
     setItemParaDeletar(id);
     setShowConfirmDeletarModal(true);
@@ -129,26 +121,55 @@ export default function ListarVagas() {
   const handleConfirmarDeletar = async () => {
     if (!itemParaDeletar) return;
     try {
-      await api.delete(`/vagas/${itemParaDeletar}`); // Chama o endpoint DELETE
+      await api.delete(`/vagas/${itemParaDeletar}`);
       setToast({ message: "Vaga deletada com sucesso!", type: "success" });
-      fetchData(); // Atualiza a lista
+      fetchData();
     } catch (error) {
       console.error("Erro ao deletar vaga:", error);
-      // Pega a mensagem de erro específica do backend (ex: "Não pode deletar vaga ocupada")
       setToast({ message: error.response?.data?.message || "Erro ao deletar vaga.", type: "error" });
     } finally {
       setShowConfirmDeletarModal(false);
       setItemParaDeletar(null);
     }
   };
-  // --- FIM DAS NOVAS FUNÇÕES ---
+  // --- Fim das Funções dos Modais ---
 
-  const vagasFiltradas = vagas.filter((vaga) => {
-    const termo = busca.toLowerCase().trim();
-    if (!termo) return true;
-    const textosPesquisaveis = [vaga.identificador, vaga.status, vaga.morador?.nome, vaga.visitante?.nome, vaga.veiculo?.placa];
-    return textosPesquisaveis.filter((texto) => texto != null).some((texto) => texto.toLowerCase().includes(termo));
-  });
+
+  // ---> 3. LÓGICA PARA FILTRO DE GRUPO
+  
+  const getGrupoFromIdentificador = (identificador) => {
+    
+    const parts = identificador.split('-');
+    if (parts.length > 1) {
+      
+      return parts[0]; 
+    }
+    
+    return 'Outros'; 
+  };
+
+  // Calcula os grupos únicos disponíveis usando useMemo
+  const availableGroups = useMemo(() => {
+    const groupSet = new Set(vagas.map(vaga => getGrupoFromIdentificador(vaga.identificador)));
+    return ["Todos", ...Array.from(groupSet).sort()];
+  }, [vagas]);
+
+
+  // ---> 4. LÓGICA DE FILTRAGEM ATUALIZADA
+  const vagasFiltradas = vagas
+    .filter((vaga) => {
+      // Primeiro, filtra pelo grupo selecionado
+      if (selectedGroup === "Todos") return true;
+      return getGrupoFromIdentificador(vaga.identificador) === selectedGroup;
+    })
+    .filter((vaga) => {
+      // Em seguida, filtra pelo termo de busca
+      const termo = busca.toLowerCase().trim();
+      if (!termo) return true;
+      const textosPesquisaveis = [vaga.identificador, vaga.status, vaga.morador?.nome, vaga.visitante?.nome, vaga.veiculo?.placa];
+      return textosPesquisaveis.filter((texto) => texto != null).some((texto) => texto.toLowerCase().includes(termo));
+    });
+
 
   if (loading) {
     return (
@@ -192,6 +213,29 @@ export default function ListarVagas() {
         <input type="text" placeholder="Pesquisar por vaga, ocupante, placa..." value={busca} onChange={(e) => setBusca(e.target.value)} className="w-full p-3 rounded-lg shadow-sm border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-gray-800 dark:text-white" />
       </div>
 
+      {/* ---> 5. NOVO MENU DE ABAS DE GRUPO (ESTILO ATUALIZADO) <--- */}
+      {availableGroups.length > 2 && (
+        <nav className="flex justify-center gap-6 sm:gap-8 mb-6 border-b border-gray-200 dark:border-gray-700">
+          {availableGroups.map((group) => {
+            const isActive = group === selectedGroup;
+            return (
+              <button
+                key={group}
+                onClick={() => setSelectedGroup(group)}
+                className={`-mb-px px-1 py-2 text-sm sm:text-base font-medium transition-colors duration-200 border-b-2
+                  ${
+                    isActive
+                      ? "text-indigo-600 dark:text-indigo-400 border-indigo-500" 
+                      : "text-gray-500 dark:text-gray-400 border-transparent hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-200" 
+                  }`}
+              >
+                {group}
+              </button>
+            );
+          })}
+        </nav>
+      )}
+
       {/* Grid de Cards Real */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {vagas.length === 0 ? (
@@ -203,11 +247,13 @@ export default function ListarVagas() {
               vaga={vaga}
               onOcupar={handleAbrirModalOcupar}
               onLiberar={handleOpenConfirmLiberarModal}
-              onDelete={handleOpenConfirmDeletarModal} // ---> Passando a nova prop
+              onDelete={handleOpenConfirmDeletarModal}
             />
           ))
         ) : (
-          <p className="text-center text-gray-500 col-span-full">Nenhuma vaga encontrada para sua busca.</p>
+          <p className="text-center text-gray-500 col-span-full">
+            Nenhuma vaga encontrada para sua busca {selectedGroup !== 'Todos' ? `no grupo ${selectedGroup}` : ''}.
+          </p>
         )}
       </div>
 
@@ -218,7 +264,7 @@ export default function ListarVagas() {
           onClose={() => setModalCriarVagaAberto(false)}
           onSave={handleSalvarNovaVaga}
           titulo="Criar Nova Vaga"
-          campos={[{ name: 'identificador', placeholder: 'Identificador (ex: A01)', required: true }]}
+          campos={[{ name: 'identificador', placeholder: 'Identificador (ex: G1-01)', required: true }]}
           formData={formDataNovaVaga}
           setFormData={setFormDataNovaVaga}
         />
@@ -238,8 +284,6 @@ export default function ListarVagas() {
         onConfirm={handleConfirmarLiberar}
         message="Tem certeza que deseja LIBERAR esta vaga?"
       />
-
-      {/* ---> NOVO MODAL DE CONFIRMAÇÃO PARA DELETAR <--- */}
       <ModalConfirmacao
         isOpen={showConfirmDeletarModal}
         onClose={() => setShowConfirmDeletarModal(false)}
@@ -247,7 +291,6 @@ export default function ListarVagas() {
         title="Confirmar Exclusão"
         message="Tem certeza que deseja DELETAR esta vaga? Esta ação é permanente."
       />
-
       <Toast toast={toast} setToast={setToast} />
     </>
   );
